@@ -1,12 +1,14 @@
 from bs4 import BeautifulSoup
 from urllib.request import Request, urlopen
 from urllib.parse import quote_plus
+import re
 
 class Word:
     def __init__(self, hanzi: str):
 
         self.hanzi = hanzi
-        self.definitions = ''
+        self.definitions = ""
+
         self.get_yellowbridge(hanzi)
         if not self.yb_exists:
             self.get_google(hanzi)
@@ -36,12 +38,16 @@ class Word:
 
         self.examples = []
         for row in soup.find_all("table")[1].find_all('li'):
-            strings = list(row.strings)
+            strings = ''.join(row.strings)
+            matches = re.fullmatch("([^\u0000-\u0080]+)([\u0000-\u0080]+)", strings)
+            if not matches: 
+                print("No matches:", strings, self.url)
+                return
+            chinese, english = matches.groups()
             self.examples.append({
-                "Chinese": ''.join(strings[:-1]),
-                "English":  strings[-1]
+                "Chinese": chinese,
+                "English": english
             })
-
         self.soup = soup
 
     def get_google(self, hanzi: str):

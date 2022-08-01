@@ -20,7 +20,7 @@ def get_data():
             # print(f"Could not parse: {row}")
             return None
         words = re.findall(r"[\u4e00-\u9fff]+", combined_words)
-        return combined_words, notes
+        return combined_words.strip(), notes.strip()
 
-    m = words.map(format_row).dropna(how='all').reset_index(drop=True)
+    m = words.map(format_row).dropna(how='all').reset_index(drop=True).fillna("")
     return pd.DataFrame.from_records(m,columns=["Words", "Details"]).set_index("Words")

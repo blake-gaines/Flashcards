@@ -1,2 +1,4 @@
 /Chinese Words.txt
 /__pycache__
+*.txt
+*.pkl

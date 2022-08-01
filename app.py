@@ -14,34 +14,34 @@ class Application:
 
         sg.theme('Default1')
         layout = [  
-            [sg.Text(size=(40,1), key='front', **self.style_args)],
+            [sg.Text(size=(40,1), key='front', auto_size_text=True, **self.style_args)],
             [sg.Button('Show', 	expand_x=True, **self.style_args), sg.Button('Page', **self.style_args)],
-            [sg.Text(size=(40,7), key='back', auto_size_text=True, **self.style_args)],
+            [sg.Text(size=(100,30), key='back', expand_x=True, font="Helveteca12")],
             [sg.Button('Known', 	expand_x=True, **self.style_args), sg.Button('Unknown', 	expand_x=True, **self.style_args)] 
         ]
         self.window = sg.Window('Window Title', layout, finalize=True, return_keyboard_events=True) # , no_titlebar=True
         self.update_word(known=None)
 
     def update_word(self, known=None):
-        hanzi, self.details = self.tracker.advance(known)
+        hanzi, self.details = self.tracker.advance(known=known)
         self.word = Word(hanzi)
-        if random.random() < 0.5:
-            front, back = self.word.hanzi, self.word.definitions
-        else:
-            front, back = self.word.definitions, self.word.hanzi
-        print(front)
+        self.front_choice = "English" if (random.random() < 0.5) else "Chinese"
+        self.full_description = ""
         if self.word.yb_exists:
-            self.full_description = \
-f"""{back}
-Pinyin: {self.word.pinyin} 
-{"Notes:" if self.details else ""}
-{self.details}
-"""
-        else:
-            self.full_description = str(self.details)
+            if self.front_choice == "Chinese":
+                self.full_description = "Pinyin: {}\nDefinition: {}".format(self.word.pinyin, self.word.definitions)
+            elif self.front_choice == "English":
+                self.full_description = f"{self.word.hanzi} ({self.word.pinyin})"
+            if self.word.examples:
+                self.full_description += "\nExamples:\n\t" + "\n\t".join([example["English"]+"\n\t"+example["Chinese"] for example in self.word.examples])
+        if self.details: self.full_description += "\nNotes:" + self.details
+
         self.window['back'].update("")
         self.showing = False
-        self.window['front'].update(front)
+        if self.front_choice == "Chinese":
+            self.window['front'].update(self.word.hanzi)
+        elif self.front_choice == "English":
+            self.window['front'].update(self.word.definitions)
 
     def run(self):
         while True:
@@ -53,11 +53,11 @@ Pinyin: {self.word.pinyin}
                     self.window['back'].update(a.full_description if a.full_description else "No Details Available")
                     self.showing = True
                 elif event == "b":
-                    self.update_word(True)
+                    self.update_word(known=True)
             if event in ["Known", "n"]:
-                self.update_word(True)
+                self.update_word(known=True)
             if event in ["Unknown", "m"]:
-                self.update_word(False)
+                self.update_word(known=False)
             if event == "Page":
                 webbrowser.open(a.word.url)
         self.window.close()
