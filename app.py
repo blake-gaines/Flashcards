@@ -11,8 +11,8 @@ class Application:
         "font": ("Helvetica", 24)
     }
     def __init__(self):
-        self.tracker=Tracker(get_data(), save_dir="./tracker.pkl")
-        print(self.tracker.data.loc[self.tracker.data[["Known", "Unknown"]].any(axis=1)])
+        self.tracker=Tracker(get_data(), save_dir="./tracker.pkl", load_dir="./tracker.pkl")
+        # print(self.tracker.data.loc[self.tracker.data[["Known", "Unknown"]].any(axis=1)])
         # sys.exit(0)
 
         sg.theme('Default1')
@@ -23,11 +23,13 @@ class Application:
             [sg.Button('Known', 	expand_x=True, **self.style_args), sg.Button('Unknown', 	expand_x=True, **self.style_args)] 
         ]
         self.window = sg.Window('Window Title', layout, finalize=True, return_keyboard_events=True) # , no_titlebar=True
+        self.index = None
         self.update_word(known=None)
 
     def update_word(self, known=None):
-        hanzi, self.details = self.tracker.advance(known=known)
-        self.word = Word(hanzi)
+        self.index, self.row = self.tracker.advance(index=self.index, known=known)
+        print("HANZI", self.row["Hanzi"])
+        self.word = Word(self.row["Hanzi"])
         self.front_choice = "English" if (random.random() < 0.5) else "Chinese"
         self.full_description = ""
         if self.word.yb_exists:
@@ -35,9 +37,11 @@ class Application:
                 self.full_description = "Pinyin: {}\nDefinition: {}".format(self.word.pinyin, self.word.definitions)
             elif self.front_choice == "English":
                 self.full_description = f"{self.word.hanzi} ({self.word.pinyin})"
+            if self.word.pos:
+                self.full_description += "\nPart of Speech: {}".format(self.word.pos)
             if self.word.examples:
                 self.full_description += "\nExamples:\n\t" + "\n\t".join([example["English"]+"\n\t"+example["Chinese"] for example in self.word.examples])
-        if self.details: self.full_description += "\nNotes:" + self.details
+        if self.row["Details"]: self.full_description += "\nNotes:" + self.row["Details"]
 
         self.window['back'].update("")
         self.showing = False
@@ -56,8 +60,8 @@ class Application:
                 if not self.showing:
                     self.window['back'].update(a.full_description if a.full_description else "No Details Available")
                     self.showing = True
-                elif event == "b":
-                    self.update_word(known=True)
+                else:
+                    self.update_word()
             if event in ["Known", "n"]:
                 self.update_word(known=True)
             if event in ["Unknown", "m"]:

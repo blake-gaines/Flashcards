@@ -6,7 +6,7 @@ def get_data():
         words = pd.Series([line for line in f.readlines() if line.strip()]).str.strip()
         words = words.drop_duplicates()
 
-    parser = re.compile(r"([\u4e00-\u9fff,， \"“”]+)[<《]?-?([\S ]*)")
+    parser = re.compile(r"([\u4e00-\u9fff,， \"“”！。]+)[<《]?-?([\S ]*)")
 
     def format_row(row: str):
         # if len(row) < 3: return
@@ -22,6 +22,6 @@ def get_data():
         return combined_words.strip(), notes.strip()
 
     m = words.map(format_row).dropna(how='all').reset_index(drop=True).fillna("")
-    words_df = pd.DataFrame.from_records(m,columns=["Words", "Details"]).drop_duplicates(subset="Words", keep="first").set_index("Words")
+    words_df = pd.DataFrame.from_records(m,columns=["Hanzi", "Details"]).drop_duplicates(subset="Hanzi", keep="first")
     print("Number of words:", len(words_df))
     return words_df
