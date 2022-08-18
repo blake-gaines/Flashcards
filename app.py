@@ -4,13 +4,16 @@ from read import get_data
 import webbrowser
 from track import Tracker
 import random
+import sys
 
 class Application:
     style_args = {
         "font": ("Helvetica", 24)
     }
     def __init__(self):
-        self.tracker=Tracker(get_data())
+        self.tracker=Tracker(get_data(), save_dir="./tracker.pkl")
+        print(self.tracker.data.loc[self.tracker.data[["Known", "Unknown"]].any(axis=1)])
+        # sys.exit(0)
 
         sg.theme('Default1')
         layout = [  
@@ -47,6 +50,7 @@ class Application:
         while True:
             event, values = self.window.read()
             if event == sg.WIN_CLOSED: # if user closes window or clicks cancel
+                self.tracker.save("./tracker.pkl")
                 break
             if event in ["Show", "b"]:
                 if not self.showing:

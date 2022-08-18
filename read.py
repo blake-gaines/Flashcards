@@ -5,7 +5,6 @@ def get_data():
     with open("Chinese Words.txt", "r", encoding="utf-8-sig") as f:
         words = pd.Series([line for line in f.readlines() if line.strip()]).str.strip()
         words = words.drop_duplicates()
-        print("Number of words:", len(words))
 
     parser = re.compile(r"([\u4e00-\u9fff,， \"“”]+)[<《]?-?([\S ]*)")
 
@@ -23,4 +22,6 @@ def get_data():
         return combined_words.strip(), notes.strip()
 
     m = words.map(format_row).dropna(how='all').reset_index(drop=True).fillna("")
-    return pd.DataFrame.from_records(m,columns=["Words", "Details"]).set_index("Words")
+    words_df = pd.DataFrame.from_records(m,columns=["Words", "Details"]).drop_duplicates(subset="Words", keep="first").set_index("Words")
+    print("Number of words:", len(words_df))
+    return words_df
